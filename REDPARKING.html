@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Live Status</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+background:
+linear-gradient(
+135deg,
+#020617,
+#0f172a,
+#111827
+);
+min-height:100vh;
+padding:20px;
+color:white;
+}
+
+.container{
+max-width:850px;
+margin:auto;
+}
+
+.logo{
+text-align:center;
+margin-bottom:25px;
+}
+
+.logo h1{
+font-size:52px;
+font-weight:800;
+margin-bottom:10px;
+}
+
+.logo p{
+opacity:.7;
+font-size:18px;
+}
+
+.card{
+background:rgba(30,41,59,.75);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,.08);
+padding:20px;
+border-radius:28px;
+margin-bottom:20px;
+box-shadow:
+0 0 40px rgba(0,0,0,.35);
+}
+
+.modeSwitch{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:20px;
+}
+
+.modeBtn{
+padding:16px;
+border:none;
+border-radius:18px;
+cursor:pointer;
+font-size:18px;
+font-weight:700;
+background:#1e293b;
+color:white;
+transition:.2s;
+}
+
+.modeBtn:hover{
+transform:scale(1.02);
+}
+
+.activeMode{
+background:
+linear-gradient(
+135deg,
+#2563eb,
+#1d4ed8
+);
+}
+
+input{
+width:100%;
+padding:18px;
+border:none;
+border-radius:18px;
+font-size:17px;
+outline:none;
+margin-bottom:20px;
+background:#334155;
+color:white;
+}
+
+input::placeholder{
+color:#cbd5e1;
+}
+
+.buttons{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:12px;
+}
+
+.actionBtn{
+padding:18px;
+border:none;
+border-radius:18px;
+cursor:pointer;
+font-size:18px;
+font-weight:800;
+transition:.2s;
+color:white;
+}
+
+.actionBtn:hover{
+transform:translateY(-2px);
+}
+
+.green{
+background:
+linear-gradient(
+135deg,
+#16a34a,
+#22c55e
+);
+}
+
+.yellow{
+background:
+linear-gradient(
+135deg,
+#d97706,
+#f59e0b
+);
+}
+
+.red{
+background:
+linear-gradient(
+135deg,
+#dc2626,
+#ef4444
+);
+}
+
+.search{
+margin-bottom:15px;
+}
+
+.feed{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.item{
+background:
+linear-gradient(
+135deg,
+rgba(51,65,85,.95),
+rgba(30,41,59,.95)
+);
+padding:18px;
+border-radius:22px;
+border:1px solid rgba(255,255,255,.06);
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin-bottom:12px;
+}
+
+.place{
+font-size:20px;
+font-weight:700;
+word-break:break-word;
+}
+
+.badge{
+padding:8px 14px;
+border-radius:14px;
+font-size:14px;
+font-weight:700;
+white-space:nowrap;
+}
+
+.small{
+background:#16a34a;
+}
+
+.medium{
+background:#d97706;
+}
+
+.large{
+background:#dc2626;
+}
+
+.meta{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:10px;
+opacity:.8;
+font-size:14px;
+}
+
+.type{
+font-weight:600;
+}
+
+.empty{
+text-align:center;
+padding:30px;
+opacity:.7;
+font-size:18px;
+}
+
+@media(max-width:700px){
+
+.logo h1{
+font-size:40px;
+}
+
+.buttons{
+grid-template-columns:1fr;
+}
+
+.top{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.meta{
+flex-direction:column;
+align-items:flex-start;
+gap:6px;
+}
+
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<div class="logo">
+
+<h1>🔴 LIVE STATUS</h1>
+
+<p>
+Gužve i parking informacije uživo
+</p>
+
+</div>
+
+<div class="card">
+
+<div class="modeSwitch">
+
+<button
+id="guzvaBtn"
+class="modeBtn activeMode"
+onclick="setMode('guzva')">
+
+🚶 GUŽVA
+
+</button>
+
+<button
+id="parkingBtn"
+class="modeBtn"
+onclick="setMode('parking')">
+
+🅿️ PARKING
+
+</button>
+
+</div>
+
+<input
+type="text"
+id="lokacija"
+placeholder="npr. Bolnica, SCC, Bingo..."
+>
+
+<div
+class="buttons"
+id="buttons">
+
+</div>
+
+</div>
+
+<div class="card">
+
+<input
+class="search"
+type="text"
+id="search"
+placeholder="🔎 Pretraži lokaciju..."
+onkeyup="renderData()"
+>
+
+<div
+class="feed"
+id="feed">
+
+<div class="empty">
+Učitavanje...
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbxuYOOR0RjMiJSid__V13wfwrLCPejJAhAICMEhgr7sIZ2qPuWQrbWhksq7UwUsRxdM/exec";
+
+let mode = "guzva";
+
+let allData = [];
+
+let userId =
+localStorage.getItem("userId");
+
+if(!userId){
+
+userId =
+Math.random()
+.toString(36)
+.substring(2,10);
+
+localStorage.setItem(
+"userId",
+userId
+);
+
+}
+
+function setMode(newMode){
+
+mode = newMode;
+
+document
+.getElementById("guzvaBtn")
+.classList.remove("activeMode");
+
+document
+.getElementById("parkingBtn")
+.classList.remove("activeMode");
+
+if(mode === "guzva"){
+
+document
+.getElementById("guzvaBtn")
+.classList.add("activeMode");
+
+}else{
+
+document
+.getElementById("parkingBtn")
+.classList.add("activeMode");
+
+}
+
+renderButtons();
+
+}
+
+function renderButtons(){
+
+const buttons =
+document.getElementById("buttons");
+
+if(mode === "guzva"){
+
+buttons.innerHTML = `
+
+<button
+class="actionBtn green"
+onclick="send('1-3 osobe')">
+1-3
+</button>
+
+<button
+class="actionBtn yellow"
+onclick="send('5-10 osoba')">
+5-10
+</button>
+
+<button
+class="actionBtn red"
+onclick="send('15+ osoba')">
+15+
+</button>
+
+`;
+
+}else{
+
+buttons.innerHTML = `
+
+<button
+class="actionBtn green"
+onclick="send('🟢 Ima mjesta')">
+IMA MJESTA
+</button>
+
+<button
+class="actionBtn yellow"
+onclick="send('🟡 Srednje')">
+SREDNJE
+</button>
+
+<button
+class="actionBtn red"
+onclick="send('🔴 Pun parking')">
+PUN
+</button>
+
+`;
+
+}
+
+}
+
+async function send(status){
+
+const lokacija =
+document
+.getElementById("lokacija")
+.value
+.trim();
+
+if(lokacija === ""){
+
+alert("Unesi lokaciju.");
+return;
+
+}
+
+try{
+
+const res =
+await fetch(SCRIPT_URL,{
+
+method:"POST",
+
+body:JSON.stringify({
+
+institucija:lokacija,
+status,
+tip:mode,
+id:userId
+
+})
+
+});
+
+const result =
+await res.json();
+
+if(!result.success){
+
+alert(result.message);
+return;
+
+}
+
+document
+.getElementById("lokacija")
+.value = "";
+
+loadData();
+
+}catch(err){
+
+alert("Greška konekcije.");
+
+}
+
+}
+
+async function loadData(){
+
+try{
+
+const res =
+await fetch(SCRIPT_URL);
+
+allData =
+await res.json();
+
+renderData();
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+function getStatusClass(status){
+
+if(
+status.includes("1-3") ||
+status.includes("Ima mjesta")
+)
+return "small";
+
+if(
+status.includes("5-10") ||
+status.includes("Srednje")
+)
+return "medium";
+
+return "large";
+
+}
+
+function renderData(){
+
+const feed =
+document.getElementById("feed");
+
+const search =
+document
+.getElementById("search")
+.value
+.toLowerCase();
+
+feed.innerHTML = "";
+
+const filtered =
+allData.filter(item =>
+item.institucija
+.toLowerCase()
+.includes(search)
+);
+
+if(filtered.length === 0){
+
+feed.innerHTML = `
+<div class="empty">
+Nema prijava.
+</div>
+`;
+
+return;
+
+}
+
+filtered.forEach(item=>{
+
+const icon =
+item.tip === "parking"
+? "🅿️"
+: "🚶";
+
+const type =
+item.tip === "parking"
+? "Parking"
+: "Gužva";
+
+feed.innerHTML += `
+
+<div class="item">
+
+<div class="top">
+
+<div class="place">
+${icon} ${item.institucija}
+</div>
+
+<div class="
+badge
+${getStatusClass(item.status)}
+">
+
+${item.status}
+
+</div>
+
+</div>
+
+<div class="meta">
+
+<div class="type">
+${type} prijava
+</div>
+
+<div>
+${new Date(
+item.vrijeme
+).toLocaleString()}
+</div>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+renderButtons();
+
+loadData();
+
+setInterval(loadData,10000);
+
+</script>
+
+</body>
+</html>
